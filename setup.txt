@@ -1,0 +1,6 @@
+http PUT http://localhost:8085/v1/projects/zenoss-zing/topics/query-in
+http PUT http://localhost:8085/v1/projects/zenoss-zing/topics/query-out
+
+export PUBSUB_PROJECT_ID=zenoss-zing
+export PUBSUB_EMULATOR_HOST=localhost:8085
+export BIGTABLE_EMULATOR_HOST=localhost:8086

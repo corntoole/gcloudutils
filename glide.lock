@@ -1,0 +1,140 @@
+hash: 2a61c77a819cc2958a6e83dbb0c7d59eac9d2613e92ed5a83ea5f412943fd84e
+updated: 2017-11-22T10:46:08.033789916-06:00
+imports:
+- name: cloud.google.com/go
+  version: 2d3a6656c17a60b0815b7e06ab0be04eacb6e613
+  repo: https://github.com/GoogleCloudPlatform/google-cloud-go.git
+  subpackages:
+  - bigtable
+  - bigtable/internal/gax
+  - bigtable/internal/option
+  - compute/metadata
+  - iam
+  - internal/version
+  - longrunning
+  - longrunning/autogen
+  - pubsub
+  - pubsub/apiv1
+- name: github.com/golang/protobuf
+  version: 1e59b77b52bf8e4b449a57e6f79f21226d571845
+  subpackages:
+  - proto
+  - protoc-gen-go/descriptor
+  - ptypes
+  - ptypes/any
+  - ptypes/duration
+  - ptypes/empty
+  - ptypes/timestamp
+  - ptypes/wrappers
+- name: github.com/googleapis/gax-go
+  version: 317e0006254c44a0ac427cc52a0e083ff0b9622f
+- name: github.com/Sirupsen/logrus
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
+  repo: https://github.com/sirupsen/logrus.git
+- name: github.com/sirupsen/logrus
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
+- name: github.com/zenoss/zing-proto
+  version: 67a133f15b26542d5589f95c93e64a8855e71410
+  subpackages:
+  - go
+  - query
+- name: golang.org/x/crypto
+  version: b176d7def5d71bdd214203491f89843ed217f420
+  subpackages:
+  - ssh/terminal
+- name: golang.org/x/net
+  version: 1c05540f6879653db88113bc4a2b70aec4bd491f
+  subpackages:
+  - context
+  - context/ctxhttp
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - lex/httplex
+  - trace
+- name: golang.org/x/oauth2
+  version: 9ff8ebcc8e241d46f52ecc5bff0e5a2f2dbef402
+  subpackages:
+  - google
+  - internal
+  - jws
+  - jwt
+- name: golang.org/x/sync
+  version: fd80eb99c8f653c847d294a001bdf2a3a6f768f5
+  subpackages:
+  - errgroup
+  - semaphore
+- name: golang.org/x/sys
+  version: bf42f188b9bc6f2cf5b8ee5a912ef1aedd0eba4c
+  subpackages:
+  - unix
+  - windows
+- name: golang.org/x/text
+  version: 88f656faf3f37f690df1a32515b479415e1a6769
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
+- name: google.golang.org/api
+  version: a0c31fb0028e0111b942a29b9fc2e9235202c48b
+  subpackages:
+  - googleapi/transport
+  - internal
+  - iterator
+  - option
+  - support/bundler
+  - transport
+  - transport/grpc
+  - transport/http
+- name: google.golang.org/appengine
+  version: 9d8544a6b2c7df9cff240fcf92d7b2f59bc13416
+  subpackages:
+  - internal
+  - internal/app_identity
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/modules
+  - internal/remote_api
+  - internal/socket
+  - internal/urlfetch
+  - socket
+  - urlfetch
+- name: google.golang.org/genproto
+  version: 11c7f9e547da6db876260ce49ea7536985904c9b
+  subpackages:
+  - googleapis/api/annotations
+  - googleapis/bigtable/admin/v2
+  - googleapis/bigtable/v2
+  - googleapis/iam/v1
+  - googleapis/longrunning
+  - googleapis/pubsub/v1
+  - googleapis/rpc/status
+  - protobuf/field_mask
+- name: google.golang.org/grpc
+  version: c1fc29613da668384b9a63e81b424d627f0b0a02
+  subpackages:
+  - balancer
+  - balancer/roundrobin
+  - codes
+  - connectivity
+  - credentials
+  - credentials/oauth
+  - encoding
+  - grpclb/grpc_lb_v1/messages
+  - grpclog
+  - internal
+  - keepalive
+  - metadata
+  - naming
+  - peer
+  - resolver
+  - resolver/dns
+  - resolver/passthrough
+  - stats
+  - status
+  - tap
+  - transport
+testImports: []

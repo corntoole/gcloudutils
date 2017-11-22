@@ -1,0 +1,19 @@
+package: github.com/johnlhamilton/pubsubtester
+ignore:
+  - github.com/johnlhamilton/pubsubtester
+import:
+- package: github.com/sirupsen/logrus
+  version: 1.0.3
+- package: github.com/Sirupsen/logrus
+  repo: https://github.com/sirupsen/logrus.git
+  version: 1.0.3
+- package: github.com/zenoss/zing-proto/go
+  version: 67a133f15b26542d5589f95c93e64a8855e71410
+  subpackages:
+  - query
+- package: cloud.google.com/go/pubsub
+  repo: https://github.com/GoogleCloudPlatform/google-cloud-go.git
+  version: v0.16.0
+- package: cloud.google.com/go/bigtable
+  repo: https://github.com/GoogleCloudPlatform/google-cloud-go.git
+  version: v0.16.0
