@@ -7,7 +7,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"github.com/golang/protobuf/proto"
-	"github.com/johnlhamilton/pubsubtester/query"
+	"github.com/johnlhamilton/gcloudutils/query"
 	"github.com/sirupsen/logrus"
 	//"github.com/zenoss/zing-proto/go/query"
 	"golang.org/x/net/context"

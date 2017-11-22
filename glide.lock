@@ -1,5 +1,5 @@
-hash: 2a61c77a819cc2958a6e83dbb0c7d59eac9d2613e92ed5a83ea5f412943fd84e
-updated: 2017-11-22T10:46:08.033789916-06:00
+hash: 0eeb5ab1b6523af0e1a764d98d13c0bca938b91bc343821a7a8491cc5307aac0
+updated: 2017-11-22T16:14:04.558224006-06:00
 imports:
 - name: cloud.google.com/go
   version: 2d3a6656c17a60b0815b7e06ab0be04eacb6e613
@@ -28,6 +28,8 @@ imports:
   - ptypes/wrappers
 - name: github.com/googleapis/gax-go
   version: 317e0006254c44a0ac427cc52a0e083ff0b9622f
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/Sirupsen/logrus
   version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
   repo: https://github.com/sirupsen/logrus.git
