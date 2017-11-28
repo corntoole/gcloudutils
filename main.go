@@ -2,65 +2,182 @@ package main
 
 import (
 	"fmt"
-	"time"
 	"math/rand"
+	"os"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/golang/protobuf/proto"
+	cli "github.com/jawher/mow.cli"
 	"github.com/johnlhamilton/gcloudutils/query"
 	"github.com/sirupsen/logrus"
 	//"github.com/zenoss/zing-proto/go/query"
-	"golang.org/x/net/context"
-	"cloud.google.com/go/bigtable"
 	"encoding/binary"
 	"math"
+
+	"cloud.google.com/go/bigtable"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 )
 
 var (
-	projectID string = "zenoss-zing"
-	btInstanceID string = "zenoss-zing-bt1"
-	tableName string = "metrics"
-	cfName string = "METRIC"
-	inputTopic string = "query-in"
+	projectID              string = "zing-dev"
+	btInstanceID           string = "zenoss-zing-bt1"
+	tableName              string = "metrics"
+	cfName                 string = "METRIC"
+	inputTopic             string = "query-in"
 	inputTopicSubscription string = "query-in-sub-query"
-	outputTopic string = "query-out"
-	subscription string = "query-out-gosub"
-	metricID string = "mymetricid"
-	start int64 = time.Now().Add(-1*time.Hour).Unix()
-	end int64 = time.Now().Add(-10*time.Minute).Unix()
+	outputTopic            string = "query-out"
+	subscription           string = "query-out-gosub"
+	metricID               string = "mymetricid"
+	start                  int64  = time.Now().Add(-1 * time.Hour).Unix()
+	end                    int64  = time.Now().Add(-10 * time.Minute).Unix()
+	newTopicSetByUser      bool   = false
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	logrus.Info("Context created")
-	err := initPubSub(ctx)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to initialize pubsub")
-	}
-	logrus.Info("Pubsub initialized")
-	err = initBigTable(ctx)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to initialize bigtable")
-	}
-	logrus.Info("Big Table Initialized")
 
-	err = readBigTable(ctx)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to read bigtable")
-	}
+	app := cli.App("gcloudutils", "Utils for Zing GCP data apps")
+	app.Version("v version", "gcloudutils 0.0.1")
 
-	go readResults(ctx)
-	time.Sleep(2 * time.Second)
-	logrus.Info("Result listener started")
-	pushMessages(ctx)
-	logrus.Info("Query messages pushed")
+	app.Command("enchilada", "Do the whole enchilada", func(cmd *cli.Cmd) {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		logrus.Info("Context created")
+		err := initPubSub(ctx)
+		if err != nil {
+			logrus.WithError(err).Fatal("Failed to initialize pubsub")
+		}
+		logrus.Info("Pubsub initialized")
+		err = initBigTable(ctx)
+		if err != nil {
+			logrus.WithError(err).Fatal("Failed to initialize bigtable")
+		}
+		logrus.Info("Big Table Initialized")
 
-	time.Sleep(30 * time.Second)
+		err = readBigTable(ctx)
+		if err != nil {
+			logrus.WithError(err).Fatal("Failed to read bigtable")
+		}
+
+		go readResults(ctx)
+		time.Sleep(2 * time.Second)
+		logrus.Info("Result listener started")
+		pushMessages(ctx)
+		logrus.Info("Query messages pushed")
+
+		time.Sleep(30 * time.Second)
+	})
+
+	app.Command("create-topic", "Create pubsub topic", func(cmd *cli.Cmd) {
+		pubsubtopic := cmd.String(cli.StringArg{
+			Name:      "TOPIC",
+			Desc:      "The name of the topic to be created",
+			Value:     "",
+			SetByUser: &newTopicSetByUser,
+		})
+
+		cmd.Spec = "TOPIC"
+		cmd.Action = func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			logrus.Info("Context created")
+			newTopic, err := createNewTopic(ctx, *pubsubtopic)
+			if err != nil {
+				logrus.WithError(err).Fatal("Failed to create pubsub topic")
+			}
+			logrus.Info("Pubsub topic created: ", newTopic.String())
+		}
+
+	})
+
+	app.Command("create-subscription", "Create pubsub subscription", func(cmd *cli.Cmd) {
+		pubsubtopic := cmd.String(cli.StringArg{
+			Name:  "TOPIC",
+			Desc:  "The name of the topic to subscribe to",
+			Value: "",
+		})
+
+		topicSubscriptionArg := cmd.String(cli.StringArg{
+			Name:  "SUBSCRIPTION",
+			Desc:  "The ID of the subscription",
+			Value: "",
+		})
+
+		cmd.Spec = "TOPIC SUBSCRIPTION"
+		cmd.Action = func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			logrus.Info("Context created")
+			newSubscription, err := createNewSubscription(ctx, *pubsubtopic, *topicSubscriptionArg)
+			if err != nil {
+				logrus.WithError(err).Fatal("Failed to create pubsub topic")
+			}
+			logrus.Info("Pubsub subscription created: ", newSubscription.String())
+		}
+
+	})
+
+	app.Run(os.Args)
 }
 
-func initPubSub(ctx context.Context) error{
+func createNewTopic(ctx context.Context, topicName string) (*pubsub.Topic, error) {
+	client, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create pubsub client")
+	}
+
+	// input topic
+	topic := client.Topic(topicName)
+	exists, err := topic.Exists(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to check if input topic exists")
+	}
+
+	if !exists {
+		topic, err = client.CreateTopic(ctx, topicName)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to create input topic")
+		}
+	}
+	return topic, nil
+}
+
+func createNewSubscription(ctx context.Context, topicName, subscriptionName string) (*pubsub.Subscription, error) {
+	client, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create pubsub client")
+	}
+
+	sub := client.Subscription(subscriptionName)
+	exists, err := sub.Exists(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to check if subscription to input topic exists")
+	}
+
+	topic := client.Topic(topicName)
+	topicExists, topicErr := topic.Exists(ctx)
+	if topicErr != nil {
+		return nil, errors.Wrap(topicErr, "Failed to check if topic exists")
+	}
+	if !topicExists {
+		return nil, fmt.Errorf("Failed to create subscription, topic %s does not exist", topic.String())
+	}
+
+	if !exists {
+		sub, err = client.CreateSubscription(ctx, subscriptionName, pubsub.SubscriptionConfig{
+			Topic:       topic,
+			AckDeadline: 30 * time.Second,
+		})
+	}
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create input topic subscription")
+	}
+	return sub, nil
+}
+
+func initPubSub(ctx context.Context) error {
 	client, err := pubsub.NewClient(ctx, projectID)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create pubsub client")
@@ -129,7 +246,7 @@ func initPubSub(ctx context.Context) error{
 	return nil
 }
 
-func initBigTable(ctx context.Context) error{
+func initBigTable(ctx context.Context) error {
 	aclient, err := bigtable.NewAdminClient(ctx, projectID, btInstanceID)
 	if err != nil {
 		return err
@@ -175,12 +292,12 @@ func generateMetrics() ([]string, []*bigtable.Mutation) {
 	rand.Seed(time.Now().Unix())
 	rowkeys := []string{}
 	mutations := []*bigtable.Mutation{}
-	for ts := start - 900; ts <= end + 900; ts += 300 {
+	for ts := start - 900; ts <= end+900; ts += 300 {
 		rowkey := fmt.Sprintf("%s#%d", metricID, ts)
 		rowkeys = append(rowkeys, rowkey)
 		mut := bigtable.NewMutation()
 		mut.Set(cfName, "NAME", bigtable.ServerTime, []byte("cpuUtil_cpuUtil"))
-		value := rand.Float64()*100.0
+		value := rand.Float64() * 100.0
 		valueBytes := make([]byte, 8)
 		binary.LittleEndian.PutUint64(valueBytes[:], math.Float64bits(value))
 		mut.Set(cfName, "VALUE", bigtable.ServerTime, valueBytes)
@@ -208,7 +325,7 @@ func readBigTable(ctx context.Context) error {
 		for _, readItem := range r["METRIC"] {
 			if readItem.Column == "METRIC:VALUE" {
 				value = math.Float64frombits(binary.LittleEndian.Uint64(readItem.Value))
-			}else if readItem.Column == "METRIC:NAME" {
+			} else if readItem.Column == "METRIC:NAME" {
 				name = string(readItem.Value)
 			}
 		}

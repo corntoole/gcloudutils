@@ -1,5 +1,5 @@
-hash: 0eeb5ab1b6523af0e1a764d98d13c0bca938b91bc343821a7a8491cc5307aac0
-updated: 2017-11-22T16:14:04.558224006-06:00
+hash: 5d6f7bb899cc99db3d8bf19ba51c45e002c983ce8ed33a438b5bec3bd92f6052
+updated: 2017-11-28T13:50:21.328794254-06:00
 imports:
 - name: cloud.google.com/go
   version: 2d3a6656c17a60b0815b7e06ab0be04eacb6e613
@@ -28,6 +28,8 @@ imports:
   - ptypes/wrappers
 - name: github.com/googleapis/gax-go
   version: 317e0006254c44a0ac427cc52a0e083ff0b9622f
+- name: github.com/jawher/mow.cli
+  version: 0e80ee9f63156ea1954dc2375c33a1c7e752c25c
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/Sirupsen/logrus
