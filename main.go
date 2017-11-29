@@ -40,6 +40,18 @@ func main() {
 	app := cli.App("gcloudutils", "Utils for Zing GCP data apps")
 	app.Version("v version", "gcloudutils 0.0.1")
 
+	projectIsSetByUser := false
+
+	projectIDArg := app.String(cli.StringArg{
+		Name:      "PROJECTID",
+		Desc:      "The Id of the GCP project",
+		Value:     "zing-dev",
+		EnvVar:    "GCP_PROJECT_ID",
+		SetByUser: &projectIsSetByUser,
+	})
+
+	app.Spec = "[PROJECTID]"
+
 	app.Command("enchilada", "Do the whole enchilada", func(cmd *cli.Cmd) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -82,7 +94,7 @@ func main() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			logrus.Info("Context created")
-			newTopic, err := createNewTopic(ctx, *pubsubtopic)
+			newTopic, err := createNewTopic(ctx, *projectIDArg, *pubsubtopic)
 			if err != nil {
 				logrus.WithError(err).Fatal("Failed to create pubsub topic")
 			}
@@ -109,7 +121,7 @@ func main() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			logrus.Info("Context created")
-			newSubscription, err := createNewSubscription(ctx, *pubsubtopic, *topicSubscriptionArg)
+			newSubscription, err := createNewSubscription(ctx, *projectIDArg, *pubsubtopic, *topicSubscriptionArg)
 			if err != nil {
 				logrus.WithError(err).Fatal("Failed to create pubsub topic")
 			}
@@ -121,7 +133,7 @@ func main() {
 	app.Run(os.Args)
 }
 
-func createNewTopic(ctx context.Context, topicName string) (*pubsub.Topic, error) {
+func createNewTopic(ctx context.Context, projectID, topicName string) (*pubsub.Topic, error) {
 	client, err := pubsub.NewClient(ctx, projectID)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to create pubsub client")
@@ -143,7 +155,7 @@ func createNewTopic(ctx context.Context, topicName string) (*pubsub.Topic, error
 	return topic, nil
 }
 
-func createNewSubscription(ctx context.Context, topicName, subscriptionName string) (*pubsub.Subscription, error) {
+func createNewSubscription(ctx context.Context, projectID, topicName, subscriptionName string) (*pubsub.Subscription, error) {
 	client, err := pubsub.NewClient(ctx, projectID)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to create pubsub client")
