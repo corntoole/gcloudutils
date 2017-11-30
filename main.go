@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
+	"github.com/corntoole/gcloudutils/query"
 	"github.com/golang/protobuf/proto"
 	cli "github.com/jawher/mow.cli"
-	"github.com/corntoole/gcloudutils/query"
 	"github.com/sirupsen/logrus"
 	//"github.com/zenoss/zing-proto/go/query"
 	"encoding/binary"
@@ -23,7 +23,7 @@ import (
 
 var (
 	projectID              string = "zing-dev"
-	btInstanceID           string = "zenoss-zing-bt1"
+	btInstanceID           string = "zing-dev-bt1"
 	tableName              string = "metrics"
 	cfName                 string = "METRIC"
 	inputTopic             string = "query-in"
@@ -52,35 +52,6 @@ func main() {
 	})
 
 	app.Spec = "[-p|--projectid]"
-
-	//app.Command("enchilada", "Do the whole enchilada", func(cmd *cli.Cmd) {
-	//	ctx, cancel := context.WithCancel(context.Background())
-	//	defer cancel()
-	//	logrus.Info("Context created")
-	//	err := initPubSub(ctx)
-	//	if err != nil {
-	//		logrus.WithError(err).Fatal("Failed to initialize pubsub")
-	//	}
-	//	logrus.Info("Pubsub initialized")
-	//	err = initBigTable(ctx)
-	//	if err != nil {
-	//		logrus.WithError(err).Fatal("Failed to initialize bigtable")
-	//	}
-	//	logrus.Info("Big Table Initialized")
-	//
-	//	err = readBigTable(ctx)
-	//	if err != nil {
-	//		logrus.WithError(err).Fatal("Failed to read bigtable")
-	//	}
-	//
-	//	go readResults(ctx)
-	//	time.Sleep(2 * time.Second)
-	//	logrus.Info("Result listener started")
-	//	pushMessages(ctx)
-	//	logrus.Info("Query messages pushed")
-	//
-	//	time.Sleep(30 * time.Second)
-	//})
 
 	app.Command("create-topic", "Create pubsub topic", func(cmd *cli.Cmd) {
 		pubsubtopic := cmd.String(cli.StringArg{
