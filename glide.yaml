@@ -1,17 +1,14 @@
-package: github.com/johnlhamilton/gcloudutils
+package: github.com/corntoole/gcloudutils
 ignore:
-- github.com/johnlhamilton/gcloudutils
+- github.com/corntoole/gcloudutils
 import:
 - package: github.com/sirupsen/logrus
   version: 1.0.3
-- package: github.com/Sirupsen/logrus
-  version: 1.0.3
   repo: https://github.com/sirupsen/logrus.git
-- package: github.com/zenoss/zing-proto
+- package: github.com/zenoss/zing-proto/go
   version: 67a133f15b26542d5589f95c93e64a8855e71410
   subpackages:
   - query
-  - go
 - package: cloud.google.com/go
   version: v0.16.0
   repo: https://github.com/GoogleCloudPlatform/google-cloud-go.git

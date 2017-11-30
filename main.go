@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	"github.com/golang/protobuf/proto"
 	cli "github.com/jawher/mow.cli"
-	"github.com/johnlhamilton/gcloudutils/query"
+	"github.com/corntoole/gcloudutils/query"
 	"github.com/sirupsen/logrus"
 	//"github.com/zenoss/zing-proto/go/query"
 	"encoding/binary"
@@ -18,6 +18,7 @@ import (
 	"cloud.google.com/go/bigtable"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"google.golang.org/api/iterator"
 )
 
 var (
@@ -42,44 +43,44 @@ func main() {
 
 	projectIsSetByUser := false
 
-	projectIDArg := app.String(cli.StringArg{
-		Name:      "PROJECTID",
+	projectIDOpt := app.String(cli.StringOpt{
+		Name:      "p projectid",
 		Desc:      "The Id of the GCP project",
 		Value:     "zing-dev",
 		EnvVar:    "GCP_PROJECT_ID",
 		SetByUser: &projectIsSetByUser,
 	})
 
-	app.Spec = "[PROJECTID]"
+	app.Spec = "[-p|--projectid]"
 
-	app.Command("enchilada", "Do the whole enchilada", func(cmd *cli.Cmd) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		logrus.Info("Context created")
-		err := initPubSub(ctx)
-		if err != nil {
-			logrus.WithError(err).Fatal("Failed to initialize pubsub")
-		}
-		logrus.Info("Pubsub initialized")
-		err = initBigTable(ctx)
-		if err != nil {
-			logrus.WithError(err).Fatal("Failed to initialize bigtable")
-		}
-		logrus.Info("Big Table Initialized")
-
-		err = readBigTable(ctx)
-		if err != nil {
-			logrus.WithError(err).Fatal("Failed to read bigtable")
-		}
-
-		go readResults(ctx)
-		time.Sleep(2 * time.Second)
-		logrus.Info("Result listener started")
-		pushMessages(ctx)
-		logrus.Info("Query messages pushed")
-
-		time.Sleep(30 * time.Second)
-	})
+	//app.Command("enchilada", "Do the whole enchilada", func(cmd *cli.Cmd) {
+	//	ctx, cancel := context.WithCancel(context.Background())
+	//	defer cancel()
+	//	logrus.Info("Context created")
+	//	err := initPubSub(ctx)
+	//	if err != nil {
+	//		logrus.WithError(err).Fatal("Failed to initialize pubsub")
+	//	}
+	//	logrus.Info("Pubsub initialized")
+	//	err = initBigTable(ctx)
+	//	if err != nil {
+	//		logrus.WithError(err).Fatal("Failed to initialize bigtable")
+	//	}
+	//	logrus.Info("Big Table Initialized")
+	//
+	//	err = readBigTable(ctx)
+	//	if err != nil {
+	//		logrus.WithError(err).Fatal("Failed to read bigtable")
+	//	}
+	//
+	//	go readResults(ctx)
+	//	time.Sleep(2 * time.Second)
+	//	logrus.Info("Result listener started")
+	//	pushMessages(ctx)
+	//	logrus.Info("Query messages pushed")
+	//
+	//	time.Sleep(30 * time.Second)
+	//})
 
 	app.Command("create-topic", "Create pubsub topic", func(cmd *cli.Cmd) {
 		pubsubtopic := cmd.String(cli.StringArg{
@@ -94,7 +95,7 @@ func main() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			logrus.Info("Context created")
-			newTopic, err := createNewTopic(ctx, *projectIDArg, *pubsubtopic)
+			newTopic, err := createNewTopic(ctx, *projectIDOpt, *pubsubtopic)
 			if err != nil {
 				logrus.WithError(err).Fatal("Failed to create pubsub topic")
 			}
@@ -121,7 +122,7 @@ func main() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			logrus.Info("Context created")
-			newSubscription, err := createNewSubscription(ctx, *projectIDArg, *pubsubtopic, *topicSubscriptionArg)
+			newSubscription, err := createNewSubscription(ctx, *projectIDOpt, *pubsubtopic, *topicSubscriptionArg)
 			if err != nil {
 				logrus.WithError(err).Fatal("Failed to create pubsub topic")
 			}
@@ -130,6 +131,9 @@ func main() {
 
 	})
 
+	app.Command("bigtable", "Bigtable actions", bigTableCmd(*projectIDOpt))
+	app.Command("pubsub", "Pubsub actions", pubsubCmd(*projectIDOpt))
+	app.Command("query", "Domain query actions", domainQueryCmd(*projectIDOpt))
 	app.Run(os.Args)
 }
 
@@ -153,6 +157,24 @@ func createNewTopic(ctx context.Context, projectID, topicName string) (*pubsub.T
 		}
 	}
 	return topic, nil
+}
+
+func getTopics(ctx context.Context, projectID string) (*pubsub.TopicIterator, error) {
+	client, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create pubsub client")
+	}
+
+	return client.Topics(ctx), nil
+}
+
+func getSubscriptions(ctx context.Context, projectID string) (*pubsub.SubscriptionIterator, error) {
+	client, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create pubsub client")
+	}
+
+	return client.Subscriptions(ctx), nil
 }
 
 func createNewSubscription(ctx context.Context, projectID, topicName, subscriptionName string) (*pubsub.Subscription, error) {
@@ -258,7 +280,105 @@ func initPubSub(ctx context.Context) error {
 	return nil
 }
 
-func initBigTable(ctx context.Context) error {
+func pubsubCmd(projectId string) func(*cli.Cmd) {
+
+	return func(cmd *cli.Cmd) {
+
+		cmd.Command("topics", "Pubsub topics commands", func(cmd *cli.Cmd) {
+			cmd.Command("list", "List PubSub topics", func(cmd *cli.Cmd) {
+				cmd.Action = func() {
+					ctx, cancel := context.WithCancel(context.Background())
+					defer cancel()
+					logrus.Info("Context created")
+					topics, err := getTopics(ctx, projectId)
+					if err != nil {
+						logrus.Error(err)
+					}
+					for {
+						t, err := topics.Next()
+						if err == iterator.Done {
+							break
+						}
+						if err != nil {
+							logrus.Error(err)
+						}
+						fmt.Println(t)
+					}
+
+				}
+			})
+		})
+
+		cmd.Command("subscriptions", "Pubsub subscriptions commands", func(cmd *cli.Cmd) {
+			cmd.Command("list", "List Pubsub subscriptions", func(cmd *cli.Cmd) {
+				cmd.Action = func() {
+					ctx, cancel := context.WithCancel(context.Background())
+					defer cancel()
+					logrus.Info("Context created")
+					subscriptions, err := getSubscriptions(ctx, projectId)
+					if err != nil {
+						logrus.Error(err)
+					}
+					for {
+						t, err := subscriptions.Next()
+						if err == iterator.Done {
+							break
+						}
+						if err != nil {
+							logrus.Error(err)
+						}
+						fmt.Println(t)
+					}
+				}
+			})
+		})
+	}
+}
+
+func bigTableCmd(projectId string) func(*cli.Cmd) {
+
+	return func(cmd *cli.Cmd) {
+		var (
+			btInstanceID = cmd.StringOpt("i bigtable-instanceid", "", "Id of the Bigtable Instance")
+			btTableName  = cmd.StringOpt("t bigtable-table", "", "Name of the BigTable")
+			cfName       = cmd.StringOpt("c bigtable-columnfamily", "", "Name of the Bigtable Column Family")
+		)
+
+		cmd.Spec = "-i -t -c"
+		cmd.Command("init", "Initialize Bigtable schema", func(cmd *cli.Cmd) {
+			cmd.Action = func() {
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+				logrus.Info("Context created")
+				logrus.Infof("Initializing BigTable for project: %s with bigtableInstance: %s bigtableTable: %s columnFamily: %s",
+					projectId, *btInstanceID, *btTableName, *cfName)
+				initBigTable(ctx, projectId, *btInstanceID, *btTableName, *cfName)
+			}
+		})
+	}
+
+}
+
+func domainQueryCmd(projectId string) func(*cli.Cmd) {
+	return func(cmd *cli.Cmd) {
+		cmd.Command("test", "Publish Domain Query request and Consume results", func(cmd *cli.Cmd) {
+			subscriptionOpt := cmd.StringOpt("s subscription", "", "PubSub subscription to consume from")
+			cmd.Action = func() {
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+
+				go readResults(ctx, projectId, *subscriptionOpt)
+				time.Sleep(2 * time.Second)
+				logrus.Info("Result listener started")
+				pushMessages(ctx, projectId)
+				logrus.Info("Query messages pushed")
+				time.Sleep(30 * time.Second)
+			}
+		})
+	}
+}
+
+func initBigTable(ctx context.Context, projectID, btInstanceID, tableName, cfName string) error {
 	aclient, err := bigtable.NewAdminClient(ctx, projectID, btInstanceID)
 	if err != nil {
 		return err
@@ -351,7 +471,7 @@ func readBigTable(ctx context.Context) error {
 	return err
 }
 
-func pushMessages(ctx context.Context) {
+func pushMessages(ctx context.Context, projectID string) {
 	query1 := query.Query{
 		Id: "query-metric-1",
 		QueryType: &query.Query_MetricQuery_{
@@ -395,7 +515,7 @@ func pushMessages(ctx context.Context) {
 	logrus.WithField("messageid", id).Info("Published a message")
 }
 
-func readResults(ctx context.Context) {
+func readResults(ctx context.Context, projectID, subscription string) {
 	client, err := pubsub.NewClient(ctx, projectID)
 	if err != nil {
 		logrus.WithError(err).Fatalf("Failed to create client for reading")
