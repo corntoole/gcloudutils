@@ -4,7 +4,7 @@ gRPC and protobuf message specs for ZING, plus generated client code in go
 # Contributing
 1. Create a branch
 2. Add/modify .proto files under the protobufs directory.  Make sure they follow the [Protobuf style guide](https://developers.google.com/protocol-buffers/docs/style)
-3. Run `make mrclean; make`
+3. Run `make clean; make`
 4. Commit your changes and make a PR.
 
 # Using

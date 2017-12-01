@@ -6,7 +6,7 @@ import:
   version: 1.0.3
   repo: https://github.com/sirupsen/logrus.git
 - package: github.com/zenoss/zing-proto/go
-  version: 67a133f15b26542d5589f95c93e64a8855e71410
+  version: d087ade3984cdc26f5f9843d60f0af43e74cecc2
   subpackages:
   - query
 - package: cloud.google.com/go

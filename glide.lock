@@ -1,5 +1,5 @@
-hash: 673be8eb33aacb55491c287a4f1a68f8820c570c630d2cabaa2976c3726fe913
-updated: 2017-11-29T17:09:47.14695045-06:00
+hash: 0fd9f1daa3d4221c3d9aea1c197c9b6fc0ec6f352d87888cb92f42d16e4937c6
+updated: 2017-12-01T10:20:05.881387818-06:00
 imports:
 - name: cloud.google.com/go
   version: 2d3a6656c17a60b0815b7e06ab0be04eacb6e613
@@ -36,9 +36,10 @@ imports:
   version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
   repo: https://github.com/sirupsen/logrus.git
 - name: github.com/zenoss/zing-proto
-  version: 67a133f15b26542d5589f95c93e64a8855e71410
+  version: d087ade3984cdc26f5f9843d60f0af43e74cecc2
   subpackages:
   - go
+  - go/query
   - query
 - name: golang.org/x/crypto
   version: b176d7def5d71bdd214203491f89843ed217f420
