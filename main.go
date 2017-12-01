@@ -6,20 +6,19 @@ import (
 	"os"
 	"time"
 
-	"cloud.google.com/go/pubsub"
-	//"github.com/corntoole/gcloudutils/query"
-	//"github.com/golang/protobuf/proto"
-	cli "github.com/jawher/mow.cli"
-	"github.com/sirupsen/logrus"
-	"github.com/zenoss/zing-proto/go/query"
 	"encoding/binary"
 	"math"
 
+	"cloud.google.com/go/pubsub"
+	cli "github.com/jawher/mow.cli"
+	"github.com/sirupsen/logrus"
+	"github.com/zenoss/zing-proto/go/query"
+
 	"cloud.google.com/go/bigtable"
+	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
-	"github.com/golang/protobuf/proto"
 )
 
 var (

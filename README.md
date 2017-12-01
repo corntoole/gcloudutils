@@ -16,5 +16,5 @@ gcloudutils bigtable init
 
 To test the domain-query dataflow-pipeline:
 ```
-gcloudutils query test
+gcloudutils query test -s query-out-gosub
 ```
