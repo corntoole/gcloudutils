@@ -26,7 +26,6 @@ GODIR                := go
 DESCRIPTORDIR        := descriptors
 JAVADIR              := java
 JAVA_SRC_DIR         := $(JAVADIR)/src/main/java
-VENDORDIR            := $(GODIR)/vendor
 PROTOFILES           := $(shell find protobufs -name "*.proto")
 GOFILES              := $(subst $(PROTODIR), $(GODIR),$(subst .proto,.pb.go,$(PROTOFILES)))
 DESCFILES            := $(subst $(PROTODIR), $(DESCRIPTORDIR),$(subst .proto,.descriptor.pb,$(PROTOFILES)))
@@ -59,7 +58,7 @@ MVN                  = docker run --rm \
 default: all_containerized
 
 .PHONY: all
-all: $(GOFILES) $(DESCFILES) $(JAVAFILES) $(VENDORDIR)
+all: $(GOFILES) $(DESCFILES) $(JAVAFILES)
 
 .PHONY: all_containerized
 all_containerized:
@@ -78,9 +77,6 @@ $(JAVA_SRC_DIR):
 $(GODIR)/%.pb.go: $(PROTOFILES) $(GODIR)
 	@$(PROTOC) -I $(PROTODIR) $(PROTODIR)/$*.proto --go_out=plugins=grpc:$(GODIR)
 
-$(VENDORDIR): $(GODIR)
-	@cd $(GODIR); make vendor
-
 $(DESCRIPTORDIR)/%.descriptor.pb: $(PROTOFILES) $(DESCRIPTORDIR)
 	@$(PROTOC) -I $(PROTODIR) $(PROTODIR)/$*.proto --include_source_info --include_imports --descriptor_set_out=$(DESCRIPTORDIR)/$*.descriptor.pb
 
@@ -92,12 +88,8 @@ $(JAVA_SRC_DIR)/%.java: $(PROTOFILES) $(JAVA_SRC_DIR)
 
 .PHONY: clean
 clean:
-	@rm -rf $(GODIR)/*.go $(DESCDIR) $(JAVA_SRC_DIR)
+	@rm -rf $(GODIR) $(DESCDIR) $(JAVA_SRC_DIR)
 	-$(MVN) -e clean
-
-.PHONY: mrclean
-mrclean: clean
-	@cd $(GODIR); make clean
 
 .PHONY: package
 package:
