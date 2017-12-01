@@ -1,5 +1,5 @@
-hash: 0eeb5ab1b6523af0e1a764d98d13c0bca938b91bc343821a7a8491cc5307aac0
-updated: 2017-11-22T16:14:04.558224006-06:00
+hash: 0fd9f1daa3d4221c3d9aea1c197c9b6fc0ec6f352d87888cb92f42d16e4937c6
+updated: 2017-12-01T10:58:10.874597542-06:00
 imports:
 - name: cloud.google.com/go
   version: 2d3a6656c17a60b0815b7e06ab0be04eacb6e613
@@ -28,17 +28,18 @@ imports:
   - ptypes/wrappers
 - name: github.com/googleapis/gax-go
   version: 317e0006254c44a0ac427cc52a0e083ff0b9622f
+- name: github.com/jawher/mow.cli
+  version: 0e80ee9f63156ea1954dc2375c33a1c7e752c25c
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
-- name: github.com/Sirupsen/logrus
-  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
-  repo: https://github.com/sirupsen/logrus.git
 - name: github.com/sirupsen/logrus
   version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
+  repo: https://github.com/sirupsen/logrus.git
 - name: github.com/zenoss/zing-proto
-  version: 67a133f15b26542d5589f95c93e64a8855e71410
+  version: d087ade3984cdc26f5f9843d60f0af43e74cecc2
   subpackages:
   - go
+  - go/query
   - query
 - name: golang.org/x/crypto
   version: b176d7def5d71bdd214203491f89843ed217f420
