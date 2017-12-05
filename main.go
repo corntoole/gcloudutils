@@ -356,16 +356,22 @@ func initBigTable(ctx context.Context, projectID, btInstanceID, tableName, cfNam
 	}
 	defer aclient.Close()
 
-	err = aclient.CreateTable(ctx, tableName)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to create table, it probably already exists or something")
-		return nil
+	tableInfo, _ := aclient.TableInfo(ctx, tableName)
+	if tableInfo != nil {
+		logrus.Infof("Table: %s exists, skipping creation", tableName)
+	} else {
+		err = aclient.CreateTable(ctx, tableName)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to create table")
+			return nil
+		}
+
+		err = aclient.CreateColumnFamily(ctx, tableName, cfName)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = aclient.CreateColumnFamily(ctx, tableName, cfName)
-	if err != nil {
-		return err
-	}
 
 	client, err := bigtable.NewClient(ctx, projectID, btInstanceID)
 	if err != nil {
