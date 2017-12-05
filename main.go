@@ -19,6 +19,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
+	"net/http"
+	"encoding/json"
 )
 
 var (
@@ -105,6 +107,7 @@ func main() {
 	app.Command("bigtable", "Bigtable actions", bigTableCmd(*projectIDOpt))
 	app.Command("pubsub", "Pubsub actions", pubsubCmd(*projectIDOpt))
 	app.Command("query", "Domain query actions", domainQueryCmd(*projectIDOpt))
+	app.Command("datastack-prereqs", "Data-stack prerequisites actions", serveDatastackInitCheckerCmd(*projectIDOpt))
 	app.Run(os.Args)
 }
 
@@ -507,5 +510,31 @@ func readResults(ctx context.Context, projectID, subscription string) {
 
 	if err != nil {
 		logrus.WithError(err).Error("Got error on sub.Receive")
+	}
+}
+
+type DataStackReqs struct {
+	Topics         []string `json:topics`
+	Subscriptions  []string `json:subscriptions`
+	BigTableTables []string `json:tables`
+}
+
+func zingDataStackInitCheckHandler(w http.ResponseWriter, r *http.Request) {
+	var appReqs DataStackReqs
+	json.NewDecoder(r.Body).Decode(&appReqs)
+
+	fmt.Fprintf(w, "nope")
+}
+
+func serveDatastackInitCheckerCmd(projectId string) func(*cli.Cmd) {
+	return func(cmd *cli.Cmd) {
+		cmd.Command("server", "A web server for checking if data stack is initialized", func(subCmd *cli.Cmd) {
+			subCmd.Action = func() {
+				http.HandleFunc("/isstackup", zingDataStackInitCheckHandler)
+				logrus.Info("Starting server")
+				http.ListenAndServe(":8199", nil)
+				logrus.Info("Stopping server")
+			}
+		})
 	}
 }
