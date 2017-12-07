@@ -315,8 +315,23 @@ func bigTableCmd(projectId string) func(*cli.Cmd) {
 			cfName       = cmd.StringOpt("c bigtable-columnfamily", "", "Name of the Bigtable Column Family")
 		)
 
-		cmd.Spec = "-i -t -c"
+		cmd.Spec = "-i"
+		cmd.Command("list", "List tables in the Bigtable Instance", func(cmd *cli.Cmd) {
+			cmd.Action = func() {
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+				logrus.Info("Context created")
+				tableNames, err := getTables(ctx, projectId, *btInstanceID)
+				if err != nil {
+					logrus.WithError(err).Error("Error get list of BigTable tables")
+				}
+				for _, table := range tableNames {
+					fmt.Println(table)
+				}
+			}
+		})
 		cmd.Command("init", "Initialize Bigtable schema", func(cmd *cli.Cmd) {
+			cmd.Spec = "-t -c"
 			cmd.Action = func() {
 				ctx, cancel := context.WithCancel(context.Background())
 				defer cancel()
@@ -372,7 +387,6 @@ func initBigTable(ctx context.Context, projectID, btInstanceID, tableName, cfNam
 		}
 	}
 
-
 	client, err := bigtable.NewClient(ctx, projectID, btInstanceID)
 	if err != nil {
 		return err
@@ -414,6 +428,16 @@ func generateMetrics() ([]string, []*bigtable.Mutation) {
 	}
 
 	return rowkeys, mutations
+}
+
+func getTables(ctx context.Context, projectID, btInstanceID string) ([]string, error) {
+	aclient, err := bigtable.NewAdminClient(ctx, projectID, btInstanceID)
+	if err != nil {
+		return nil, err
+	}
+	defer aclient.Close()
+
+	return aclient.Tables(ctx)
 }
 
 func readBigTable(ctx context.Context) error {
