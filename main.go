@@ -311,7 +311,7 @@ func bigTableCmd(projectId string) func(*cli.Cmd) {
 	return func(cmd *cli.Cmd) {
 		var (
 			btInstanceID = cmd.StringOpt("i bigtable-instanceid", "", "Id of the Bigtable Instance")
-			btTableName  = cmd.StringOpt("t bigtable-table", "", "Name of the BigTable")
+			btTableName  = cmd.StringOpt("t bigtable-table", "", "Name of the Bigtable")
 			cfName       = cmd.StringOpt("c bigtable-columnfamily", "", "Name of the Bigtable Column Family")
 		)
 
@@ -323,21 +323,24 @@ func bigTableCmd(projectId string) func(*cli.Cmd) {
 				logrus.Info("Context created")
 				tableNames, err := getTables(ctx, projectId, *btInstanceID)
 				if err != nil {
-					logrus.WithError(err).Error("Error get list of BigTable tables")
+					logrus.WithError(err).Error("Error getring list of Bigtable tables")
 				}
 				for _, table := range tableNames {
 					fmt.Println(table)
 				}
 			}
 		})
-		cmd.Command("init", "Initialize Bigtable schema", func(cmd *cli.Cmd) {
+		cmd.Command("create", "Create Bigtable table", func(cmd *cli.Cmd) {
 			cmd.Action = func() {
 				ctx, cancel := context.WithCancel(context.Background())
 				defer cancel()
 				logrus.Info("Context created")
-				logrus.Infof("Initializing BigTable for project: %s with bigtableInstance: %s bigtableTable: %s columnFamily: %s",
+				logrus.Infof("Creating Bigtable table for project: %s with bigtableInstance: %s bigtableTable: %s columnFamily: %s",
 					projectId, *btInstanceID, *btTableName, *cfName)
-				initBigTable(ctx, projectId, *btInstanceID, *btTableName, *cfName)
+				err := createBigTable(ctx, projectId, *btInstanceID, *btTableName, *cfName)
+				if err != nil {
+					logrus.WithError(err).Error("Error creating Bigtable table")
+				}
 			}
 		})
 	}
@@ -361,6 +364,32 @@ func domainQueryCmd(projectId string) func(*cli.Cmd) {
 			}
 		})
 	}
+}
+
+func createBigTable(ctx context.Context, projectID, btInstanceID, tableName, cfName string) error {
+	aclient, err := bigtable.NewAdminClient(ctx, projectID, btInstanceID)
+	if err != nil {
+		return err
+	}
+	defer aclient.Close()
+
+	tableInfo, _ := aclient.TableInfo(ctx, tableName)
+	if tableInfo != nil {
+		logrus.Infof("Table: %s exists, skipping creation", tableName)
+	} else {
+		err = aclient.CreateTable(ctx, tableName)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to create table")
+			return nil
+		}
+
+		err = aclient.CreateColumnFamily(ctx, tableName, cfName)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func initBigTable(ctx context.Context, projectID, btInstanceID, tableName, cfName string) error {
