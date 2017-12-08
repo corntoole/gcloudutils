@@ -315,7 +315,7 @@ func bigTableCmd(projectId string) func(*cli.Cmd) {
 			cfName       = cmd.StringOpt("c bigtable-columnfamily", "", "Name of the Bigtable Column Family")
 		)
 
-		cmd.Spec = "-i"
+		cmd.Spec = "-i -t -c"
 		cmd.Command("list", "List tables in the Bigtable Instance", func(cmd *cli.Cmd) {
 			cmd.Action = func() {
 				ctx, cancel := context.WithCancel(context.Background())
@@ -331,7 +331,6 @@ func bigTableCmd(projectId string) func(*cli.Cmd) {
 			}
 		})
 		cmd.Command("init", "Initialize Bigtable schema", func(cmd *cli.Cmd) {
-			cmd.Spec = "-t -c"
 			cmd.Action = func() {
 				ctx, cancel := context.WithCancel(context.Background())
 				defer cancel()
